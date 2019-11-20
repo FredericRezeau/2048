@@ -11,6 +11,25 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
   this.inputManager.on("keepPlaying", this.keepPlaying.bind(this));
 
   this.setup();
+
+  Litemint.initialize();
+
+  Litemint.getToken().then(token => {
+    this.token = token;
+    Litemint.validateToken(this.token, false)
+    .then(user => {
+      if (user.id) {
+        document.getElementById("greeting").innerHTML = "Welcome <strong>" + user.id.replace("*litemint.com", "") + "</strong>,";
+      }
+      else {
+        document.getElementById("greeting").innerHTML = "Welcome,";
+      }
+    })
+    .catch(err => {
+        document.getElementById("greeting").innerHTML = "Welcome,";
+    });
+});
+
 }
 
 // Restart the game
@@ -79,6 +98,9 @@ GameManager.prototype.addRandomTile = function () {
 GameManager.prototype.actuate = function () {
   if (this.storageManager.getBestScore() < this.score) {
     this.storageManager.setBestScore(this.score);
+
+    // Update the score.    
+    Litemint.submitScore(this.token, this.storageManager.getBestScore(), false).then(result => {});
   }
 
   // Clear the state when the game is over (game over only, not win)
